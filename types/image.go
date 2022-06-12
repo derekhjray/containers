@@ -6,7 +6,7 @@ type Image struct {
 	ID        string
 	Digest    string
 	Size      int64
-	Env       []string
+	Envs      []string
 	User      string
 	Labels    map[string]string
 	RepoTags  []string

@@ -50,7 +50,7 @@ func (d *docker) ImageInspect(ctx context.Context, imageId string) (*types.Image
 
 	if imginfo.Config != nil {
 		image.Labels = imginfo.Config.Labels
-		image.Env = imginfo.Config.Env
+		image.Envs = imginfo.Config.Env
 	}
 
 	return image, nil
