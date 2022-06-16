@@ -91,22 +91,22 @@ func (d *docker) ContainerInspect(ctx context.Context, containerId string) (*typ
 	}
 
 	container := &types.Container{
-		ID:    cjson.ID,
-		Name:  strings.TrimPrefix(cjson.Name, "/"),
-		Image: cjson.Image,
+		ID:      cjson.ID,
+		Name:    strings.TrimPrefix(cjson.Name, "/"),
+		ImageID: cjson.Image,
 	}
 
 	if container.Created, err = time.Parse(time.RFC3339Nano, cjson.Created); err != nil {
-		log.Debug("Parse container(%s) created time failed, reason: %v", container.Name, err)
+		log.Debugf("Parse container(%s) created time failed, reason: %v", container.Name, err)
 	}
 
 	if cjson.State != nil {
 		if container.Started, err = time.Parse(time.RFC3339Nano, cjson.State.StartedAt); err != nil {
-			log.Debug("Parse container(%s) started time failed, reason: %v", container.Name, err)
+			log.Debugf("Parse container(%s) started time failed, reason: %v", container.Name, err)
 		}
 
 		if container.Finished, err = time.Parse(time.RFC3339Nano, cjson.State.FinishedAt); err != nil {
-			log.Debug("Parse container(%s) finished time failed, reason: %v", container.Name, err)
+			log.Debugf("Parse container(%s) finished time failed, reason: %v", container.Name, err)
 		}
 
 		container.State = cjson.State.Status
@@ -120,6 +120,8 @@ func (d *docker) ContainerInspect(ctx context.Context, containerId string) (*typ
 		if container.User == "" {
 			container.User = "root"
 		}
+
+		container.Image = cjson.Config.Image
 	}
 
 	if cjson.HostConfig != nil {
@@ -127,7 +129,9 @@ func (d *docker) ContainerInspect(ctx context.Context, containerId string) (*typ
 		container.NetMode = string(cjson.HostConfig.NetworkMode)
 		container.PidMode = string(cjson.HostConfig.PidMode)
 		container.Memory = cjson.HostConfig.Memory
-		container.CPUs = fmt.Sprintf("%0.2f", float64(cjson.HostConfig.CPUQuota)/float64(cjson.HostConfig.CPUPeriod))
+		if cjson.HostConfig.CPUPeriod > 0 {
+			container.CPUs = fmt.Sprintf("%0.2f", float64(cjson.HostConfig.CPUQuota)/float64(cjson.HostConfig.CPUPeriod))
+		}
 	}
 
 	if cjson.NetworkSettings != nil {
